@@ -1,0 +1,28 @@
+default_environment: dev
+
+browser:
+  name: chrome            # chromium | chrome | edge | firefox | webkit
+  headless: false
+  slow_mo: 300
+  timeout: 30000          # ms, timeout por defecto de acciones/navegación
+
+viewport:
+  width: 1280
+  height: 720
+
+recording:
+  trace: retain-on-failure       # off | on | retain-on-failure
+  video: retain-on-failure       # off | on | retain-on-failure
+  screenshot_on_failure: true
+
+paths:
+  logs: logs
+  screenshots: screenshots
+  reports: reports
+
+retry:
+  max_attempts: 3
+  delay_seconds: 1
+
+api:
+  timeout: 15             # segundos, timeout por defecto de requests

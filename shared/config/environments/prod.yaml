@@ -1,0 +1,7 @@
+# Reemplaza por la URL real de producción cuando exista.
+# No pongas credenciales aquí: usa variables de entorno / .env (ver .env.example).
+base_url: "https://www.miempresa.com"
+api_base_url: "https://api.miempresa.com"
+
+browser:
+  headless: true

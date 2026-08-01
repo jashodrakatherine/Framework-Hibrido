@@ -1,0 +1,3 @@
+# Reemplaza por la URL real de QA cuando exista.
+base_url: "https://qa.miempresa.com"
+api_base_url: "https://qa-api.miempresa.com"
