@@ -6,7 +6,7 @@ prueba, que comparten solo lo genérico:
 ```
 shared/   Config, logger, excepciones base, utils, datos de prueba
 web/      Automatización de UI sobre Playwright (BDD con pytest-bdd)
-api/      Pruebas de API sobre requests (pytest normal)
+api/      Pruebas de API sobre requests (BDD con pytest-bdd)
 ```
 
 `web/` y `api/` nunca se importan entre sí ni comparten abstracciones de
@@ -16,11 +16,14 @@ llama a Playwright directamente: siempre pasa por `Pages` (heredan de
 pantallas). Dentro de `api/`, un test nunca llama a `requests` directamente:
 siempre pasa por `ApiClient`.
 
-Los tests web están escritos en Gherkin (BDD) con `pytest-bdd`: cada caso es
-un `Scenario` en un archivo `.feature`, implementado por *step definitions*
-en Python que hablan con `Pages`/`Workflows`. Los tests de API son pytest
-normal (no hay BDD ahí; el valor de Gherkin es para flujos de negocio
-legibles por no-técnicos, no para verificar contratos HTTP).
+Tanto los tests web como los de API están escritos en Gherkin (BDD) con
+`pytest-bdd`: cada caso es un `Scenario` en un archivo `.feature`,
+implementado por *step definitions* en Python que hablan con
+`Pages`/`Workflows` (web) o con `ApiClient` (api). Cada módulo tiene su
+propio directorio `features/`, por lo que las step definitions de API
+indican explícitamente su `features_base_dir` al llamar a `scenarios(...)`
+en vez de depender del `bdd_features_base_dir` global (que apunta a
+`web/tests/features`).
 
 ## Estructura
 
@@ -45,8 +48,9 @@ api/
   core/
     api_client.py   ApiClient, wrapper sobre requests
   tests/
+    features/       Escenarios en Gherkin (.feature) — el "qué" en lenguaje natural
+    step_defs/      Step definitions en Python — el "cómo", habla con ApiClient
     conftest.py     Fixture `api_client`
-    test_*.py       Pruebas de API (pytest normal)
 
 reports/      HTML report, Allure results, traces, videos (generado, no versionado)
 screenshots/  Capturas automáticas en fallos de tests web (generado, no versionado)
@@ -134,16 +138,23 @@ escenarios. `web/workflows/login_workflow.py` queda disponible para procesos
 compuestos que necesiten loguearse como parte de un flujo más largo (ej. un
 checkout).
 
-## Agregar una nueva prueba de API
+## Agregar un nuevo escenario de API
 
-Usa la fixture `api_client` (definida en `api/tests/conftest.py`) y llama a
-`.get/.post/.put/.patch/.delete("/ruta", ...)`, que devuelven un
-`requests.Response` normal (`.status_code`, `.json()`, etc.). Marca el test
-con `@pytest.mark.smoke` o `@pytest.mark.regression` según corresponda.
+1. Escenario en lenguaje natural → `api/tests/features/<algo>.feature`, con
+   `@smoke` o `@regression` según corresponda
+2. Step definitions → `api/tests/step_defs/test_<algo>_steps.py`, con
+   `scenarios("<algo>.feature", features_base_dir=str(FEATURES_DIR))` (donde
+   `FEATURES_DIR` apunta a `api/tests/features`) y los steps hablando con la
+   fixture `api_client` (definida en `api/tests/conftest.py`), nunca con
+   `requests` directo. `.get/.post/.put/.patch/.delete("/ruta", ...)`
+   devuelven un `requests.Response` normal (`.status_code`, `.json()`, etc.);
+   guárdalo en la fixture `context` (dict) para leerlo desde los steps
+   `Then`.
 
-`api/tests/test_demo_api.py` corre contra
+`api/tests/features/demo_api.feature` +
+`api/tests/step_defs/test_demo_api_steps.py` corren contra
 [jsonplaceholder.typicode.com](https://jsonplaceholder.typicode.com) (API
-pública gratuita, sin autenticación) y sirve de plantilla.
+pública gratuita, sin autenticación) y sirven de plantilla.
 
 ## Próximos pasos sugeridos
 
